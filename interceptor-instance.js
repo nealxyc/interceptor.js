@@ -1,16 +1,11 @@
 /**
 
-	Interceptor 0.1 
-		Intercepts function calls by overwriting Function.prototype.call and Function.prototype.apply
-		The performance is just too bad. Not practical.
+	Interceptor 0.2 - intercept function calls by overwriting the target function's apply and call method.
 */
 
 (function(global, module){
 	var registry = {};
 	var interceptorList = [];
-	var matchProbe = function(){ return false ;};
-	// interceptorList._push = interceptorList.push;
-	
 	/** Function constants */
 	var SKIP = function(){ return "Skips the target function. "};
 	var NOSKIP = function(){ return "Continue to run target function. "};
@@ -41,7 +36,7 @@
 			for(var i in this.chainedInterceptors){
 				this.chainedInterceptors[i].releaseRuntimeState() ;
 			}
-			this.chainedInterceptors = undefined;
+			this.chainedInterceptors = [];
 		},
 		chainInterceptor: function(interceptor){
 			this.chainedInterceptors.push(interceptor) ;
@@ -66,20 +61,20 @@
 			*/
 			return returnVal ;
 		},
-		setRuntimeState: function(rtState){
-			this.runtimeState = rtState;
-			rtState.chainInterceptor(this);
+		attachRuntimeState: function(runtimeState){
+			this.runtimeState = runtimeState;
+			runtimeState.chainInterceptor(this);
 		},
 		releaseRuntimeState: function(){
 			this.runtimeState = undefined ;
 		},
 		/** Skip the target function and return returnVal */
-		returnValue: function(returnVal){
+		doReturn: function(returnVal){
 			this.runtimeState.returnVal = returnVal ;
 			this.runtimeState.skipTarget = true ;
 		},
 
-		skipTarget: function(){
+		doSkip: function(){
 			this.runtimeState.skipTarget = true ;
 		}
 
@@ -102,29 +97,12 @@
 		Finds all the interceptors that match the current target function and run their interceptPreCall() function.
 		@returns {Interceptor.RuntimeState} Whether continue the invocation of the target function. 
 	*/
-	var doInterceptPreCall = function(thisArg, targetFunc, argList, runtimeState){
+	var doInterceptPreCall = function(thisArg, targetFunc, argList, runtimeState, interceptor){
 
-		for(var i = 0 ; i < interceptorList.length; i ++){
-			var interceptor = interceptorList[i];
-			var matched = false;
-			interceptor.setRuntimeState(runtimeState);
-			try{
-				matched = interceptor.matcher.evaluate(thisArg, targetFunc, argList);
-			}catch(e){
-				//warn e
-				//TODO
-				console.error(e);
-			}
-
-			if(matched){
-				interceptor.interceptPreCall(thisArg, targetFunc, argList);
-				if(runtimeState.skipTarget){
-					//return false ;
-					// If any interceptor skips the target function, break and return 
-					break ;
-				}
-			}
-		}
+		//var interceptor //= interceptorList[i];
+		interceptor.attachRuntimeState(runtimeState);
+		interceptor.interceptPreCall(thisArg, targetFunc, argList);
+		
 	};	
 
 	/**
@@ -159,7 +137,64 @@
 	var _bind = Function.prototype.bind ;
 	_bind.apply = _apply ;
 
+	/** Returns a wrapped call function that is already intercepted by the interceptor */
+	var callFactory = function(_call, interceptor){
+		return function call(arg){
+			var thisArg = arguments[0];
+			var argList = argsToArray(arguments) ;
+			// if (argList.length > 1){
+			// 	argList.shift();
+			// }
+			var runtimeState = new RuntimeState();
+			//interceptPreCall
+			doInterceptPreCall(thisArg, this, argList, runtimeState, interceptor);
+
+			if(!runtimeState.skipTarget){
+				// call the function.
+				runtimeState.returnVal = (_apply.bind(this))(thisArg, argList);
+				// runtimeState.returnVal = _call.apply(this, argList);
+			}
+
+			//interceptPostCall
+			// ret = doInterceptPostCall(thisArg, this, argList, ret);
+			// run
+			return runtimeState.returnVal ;
+		};
+	};
+
+	/** Returns a wrapped apply function that is already intercepted by the interceptor */
+	var applyFactory = function(_apply, interceptor){
+		return function apply(){
+			var thisArg = arguments[0];
+			var argList;
+			switch(arguments.length){
+				case 0:
+				case 1:
+					argList = [];			
+					break;
+				case 2:
+				default:
+				argList = arguments[1];	
+				
+			}
+
+			var runtimeState = new RuntimeState();
+			//interceptPreCall
+			doInterceptPreCall(thisArg, this, argList, runtimeState, interceptor);
+
+			if(!runtimeState.skipTarget){
+				// call the function.
+				runtimeState.returnVal = (_apply.bind(this))(thisArg, argList);
+				// runtimeState.returnVal = _apply.call(this, thisArg, argList);//this._apply(thisARg, argList)
+			}
+
+			//interceptPostCall
+			// ret = doInterceptPostCall(thisArg, this, argList, ret);
+			return runtimeState.returnVal ;
+		};
+	};
 	Interceptor.start = function(){
+		
 
 		Function.prototype.call = function(){
 			var thisArg = arguments[0];
@@ -178,7 +213,7 @@
 
 			//interceptPostCall
 			// ret = doInterceptPostCall(thisArg, this, argList, ret);
-			runtimeState.finalize();
+			// run
 			return runtimeState.returnVal ;
 		};
 
@@ -208,14 +243,14 @@
 
 			//interceptPostCall
 			// ret = doInterceptPostCall(thisArg, this, argList, ret);
-			runtimeState.finalize();
 			return runtimeState.returnVal ;
 		};
+
 	};
 
 	Interceptor.end = function(){
-		Function.prototype.call = _call ;
-		Function.prototype.apply = _apply ;
+		// Function.prototype.call = _call ;
+		// Function.prototype.apply = _apply ;
 	};
 
 	Interceptor.interceptPreAll = function(interceptorFunc){
@@ -226,15 +261,19 @@
 		}
 	}
 
-	Interceptor.interceptPre = function(targetFunc, interceptorFunc){
-
-		if(targetFunc && interceptorFunc){
-
-			var intcpt = new Interceptor(function(thisArg, target){return target === targetFunc;});
-			intcpt.interceptPreCall = interceptorFunc || intcpt.interceptPreCall;
-			interceptorList.push(intcpt);
-			// interceptorList[interceptorList.length] = intcpt ;
+	Interceptor.intercept= function(targetFunc, preFunc, postFunc){
+		if(typeof targetFunc !== "function"){
+			throw Error("No target function specified.")
 		}
+		if(preFunc){
+			var interceptor = new Interceptor(function(thisArg, target){return target === targetFunc;});
+			interceptor.interceptPreCall = preFunc || interceptor.interceptPreCall;
+
+		}
+		//TODO postFunc
+
+		targetFunc.call = callFactory(targetFunc.call, interceptor);
+		targetFunc.apply = applyFactory(targetFunc.apply, interceptor);
 	}
 
 	var argsToArray = function(args){

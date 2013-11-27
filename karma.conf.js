@@ -14,7 +14,8 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'interceptor.js',
+      // 'interceptor.js',
+      'interceptor-instance.js',
       'test/*.js'
      
     ],
@@ -22,7 +23,7 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-      
+     'test/test.js'
     ],
 
 
