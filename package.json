@@ -1,0 +1,40 @@
+{
+  "name": "Interceptor.js",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nealxyc/interceptor.js"
+  },
+  "keywords": [
+    "function",
+    "interception",
+    ""
+  ],
+  "author": "Neal Xiong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nealxyc/interceptor.js/issues"
+  },
+  "devDependencies": {
+    "karma-script-launcher": "~0.1.0",
+    "karma-firefox-launcher": "~0.1.0",
+    "karma-chrome-launcher": "~0.1.0",
+    "karma-html2js-preprocessor": "~0.1.0",
+    "karma-jasmine": "~0.1.3",
+    "requirejs": "~2.1.9",
+    "karma-requirejs": "~0.2.0",
+    "karma-coffee-preprocessor": "~0.1.0",
+    "karma-phantomjs-launcher": "~0.1.0",
+    "karma": "~0.10.5",
+    "karma-nunit": "~0.1.1",
+    "nunit": "~0.2.1"
+  }
+}
