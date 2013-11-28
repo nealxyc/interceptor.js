@@ -14,22 +14,22 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      // 'interceptor.js',
-      'interceptor-instance.js',
+      'interceptor.js',
+      //'test/test.js'
       'test/*.js'
-     
+        
     ],
 
 
     // list of files to exclude
     exclude: [
-     'test/test.js'
+      'test/test-0.1.js'
     ],
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['progress'],
+    reporters: ['dots'],
 
 
     // web server port
