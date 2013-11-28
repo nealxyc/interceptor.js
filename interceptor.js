@@ -9,14 +9,14 @@
 	/** Function constants */
 	var SKIP = function(){ return "Skips the target function. "};
 	var NOSKIP = function(){ return "Continue to run target function. "};
-	/* 	1. before all functions call.
-		2. after all function call.
-		3. before one function call.
-		4. after one function call.
-		5. customized matcher.
+	/* 
+		1. before one function call.
+		2. after one function call.
+		3. customized matcher.
 			* before
 			* after
-
+		before all functions call ?
+		after all function call ?
 		Interceptors should be 'chainable'
 	*/
 	var Interceptor = function(matcherFunc){
@@ -159,7 +159,7 @@
 
 	/** Returns a wrapped apply function that is already intercepted by the interceptor */
 	var applyFactory = function(_apply, interceptor){
-		return function apply(){
+		return function apply(arg1, arg2){
 			var thisArg = arguments[0];
 			var argList;
 			switch(arguments.length){
