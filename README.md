@@ -1,11 +1,21 @@
 # Interceptor.js
 
-###### Latest version: v0.2.0
 > Interceptor.js is a JavaScript framework that provides the ability to intercept a JavaScript function call.
 
+## Installation 
+> Latest version: v0.2.0
+
+With `npm`
+```sh
+npm install interceptor.js
+```
+With `bower`
+```sh
+bower install interceptor.js
+```
 
 ## What does it do? 
-Let's look at the hello world example
+Let's go over the hello world example first
 ```js
 var hi = function(name){ return "Hello " + name ;}//
 hi.call();
@@ -13,6 +23,7 @@ hi.call();
 
 //We can fix this by intercepting before the function call
 Interceptor.intercept(hi, function(thisArg, targetFunc, argList){
+	//If no argument or the first argument is undefined we replace the first argument with "guest"
 	if(argList.length == 0 || argList[0] == undefined){
 		argList[0] = "guest" ;
 	}
@@ -24,10 +35,10 @@ hi.call(null, "World");
 // => "Hello World" 
 ```
 ## Prerequisite and limitation
-As you can see from the example above, the `hi` function is called by its `call` method. 
+As you can see from the example above, the `hi` function was called through its `call` method. 
 
 Indeed __Interceptor.js__ intercepts a function by overwriting its `call` and `apply` methods. 
-Therefore, in order for the interception to be working, 
+Therefore, in order for the interception to be effective, 
 * it requires the caller to call the target function through its `call` or `apply` method.
 
 ## Programming APIs
