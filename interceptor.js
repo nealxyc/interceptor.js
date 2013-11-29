@@ -54,10 +54,6 @@
 
 		doSkip: function(){
 			this.runtimeState.skipTarget = true ;
-		},
-		/** Reverse the interception and reset target function to its normal state. */
-		release: function(){
-
 		}
 
 	};
@@ -129,20 +125,27 @@
 		var newCall = function call(arg){
 			var thisArg = arguments[0];
 			var argList = argsToArray(arguments);
-			if (argList.length > 1){
+			if (arguments.length > 0){
 				argList.shift();
 			}
 			var runtimeState = new RuntimeState();
 			//interceptPreCall
 			doInterceptPreCall(thisArg, this, argList, runtimeState, interceptor);
-
+			// for call to the target function
+			if(arguments.length > 0 || argList.length > 0){
+				argList.unshift(thisArg);
+			}
+			
 			if(!runtimeState.skipTarget){
 				// call the function.
 				//runtimeState.returnVal = (_apply.bind(this))(thisArg, argList);
-				argList.unshift(thisArg);
+				
 				runtimeState.returnVal = _call.apply(this, argList);
 			}
-
+			// for post call
+			if (arguments.length > 0 || argList.length > 0){
+				argList.shift();
+			}
 			//interceptPostCall
 			doInterceptPostCall(thisArg, this, argList, runtimeState, interceptor);
 			

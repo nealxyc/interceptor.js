@@ -309,6 +309,7 @@ test.testBind = function(a){
 	});
 
 	var func3 = func.bind({});
+	// func3 is generated from the original func so no interception is added to it.
 	a.eq(undefined, func3.call())
 
 }
@@ -367,16 +368,36 @@ test.testRevertAll = function(a){
 };
 
 test.helloWorld = function(a){
-	var hi = function(guest){ return "Hello " + guest ;}
+	var hi = function(name){ return "Hello " + name ;}
 	hi.call();// => "Hello undefined";
 	a.eq("Hello undefined", hi.call());
+	a.eq("Hello undefined", hi.apply());
 
+	var tr = a.tracer();
 	Interceptor.intercept(hi, function(thisArg, targetFunc, argList){
 		if(argList.length == 0 || argList[0] == undefined){
 			argList[0] = "guest" ;
 		}
+		tr.once();
 	});
 
-	a.neq(hi.call, Function.prototype.call)
 	a.eq("Hello guest", hi.call());	
+	a.eq("Hello guest", hi.apply());
+	a.eq("Hello guest", hi.call(null));	
+	a.eq("Hello guest", hi.apply(null));
+	a.eq("Hello guest", hi.call(undefined));	
+	a.eq("Hello guest", hi.apply(undefined));
+	a.eq("Hello guest", hi.call({}));	
+	a.eq("Hello guest", hi.apply({}));
+	a.eq("Hello guest", hi.call(""));	
+	a.eq("Hello guest", hi.apply(""));
+
+	a.eq("Hello world", hi.call(null, "world"));
+	a.eq("Hello world", hi.apply(null, ["world"]));
+	a.eq("Hello world", hi.call("", "world"));
+	a.eq("Hello world", hi.apply("", ["world"]));		
+	a.eq("Hello world", hi.call("", "world", "apple"));
+	a.eq("Hello world", hi.apply("", ["world", "apple"]));	
+	tr.verify(1);
+
 }
