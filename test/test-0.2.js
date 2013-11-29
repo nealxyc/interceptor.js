@@ -401,3 +401,7 @@ test.helloWorld = function(a){
 	tr.verify(1);
 
 }
+
+if(typeof module !== "undefined"){
+	module.exports = test ;
+}
