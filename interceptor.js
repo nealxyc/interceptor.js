@@ -129,7 +129,6 @@
 		var newCall = function call(arg){
 			var thisArg = arguments[0];
 			var argList = argsToArray(arguments);
-			var applyArgList = argList.concat([]); //this is used for invoking the original _call function 
 			if (argList.length > 1){
 				argList.shift();
 			}
@@ -140,7 +139,8 @@
 			if(!runtimeState.skipTarget){
 				// call the function.
 				//runtimeState.returnVal = (_apply.bind(this))(thisArg, argList);
-				runtimeState.returnVal = _call.apply(this, applyArgList);
+				argList.unshift(thisArg);
+				runtimeState.returnVal = _call.apply(this, argList);
 			}
 
 			//interceptPostCall
@@ -273,7 +273,7 @@
 	Interceptor.isIntercepted = function(targetFunc){
 		return targetFunc.call && targetFunc.call._call || targetFunc.apply && targetFunc.apply._apply ;
 	}
-	
+
 	/** Revert the interception once */
 	Interceptor.revert = function(targetFunc){
 		if(targetFunc && targetFunc.call && targetFunc.call._call){

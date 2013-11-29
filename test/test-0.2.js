@@ -12,6 +12,7 @@ test.after = function(){
 	// console.log("Time used: " + (endTime - startTime) + " ms.");
 };
 
+
 test.testNoIntercept = function(a){
 	
 	var obj = {};
@@ -54,6 +55,10 @@ test.testNoIntercept = function(a){
 	a.equals("func3", func3.call(obj));
 	a.equals("func3", func3.apply(obj));
 };
+
+test.testDoSkip = function(a){
+	var func = function(){ return "func";};
+}
 
 test.testInterceptPre = function(a){
 	
@@ -360,3 +365,18 @@ test.testRevertAll = function(a){
 	a.eq( Function.prototype.call, func.call);
 
 };
+
+test.helloWorld = function(a){
+	var hi = function(guest){ return "Hello " + guest ;}
+	hi.call();// => "Hello undefined";
+	a.eq("Hello undefined", hi.call());
+
+	Interceptor.intercept(hi, function(thisArg, targetFunc, argList){
+		if(argList.length == 0 || argList[0] == undefined){
+			argList[0] = "guest" ;
+		}
+	});
+
+	a.neq(hi.call, Function.prototype.call)
+	a.eq("Hello guest", hi.call());	
+}
