@@ -304,7 +304,59 @@ test.testBind = function(a){
 	});
 
 	var func3 = func.bind({});
-	a.eq("", func3.call())
+	a.eq(undefined, func3.call())
 
 }
 
+
+test.testRevert = function(a){
+	var func = function(){return "func"};
+	a.eq(func.call, Function.prototype.call);
+	Interceptor.intercept(func, function(thisArg, targetFunc, argList){
+		if(thisArg !== undefined)
+			this.doReturn(thisArg.toString());
+	});
+	a.neq(func.call, Function.prototype.call);
+	a.eq("abc", func.call("abc"))
+
+	var _interceptedCall = func.call ;
+	Interceptor.intercept(func, null, function(thisArg, targetFunc, argList, ret){
+		if(ret == undefined)
+			this.doReturn("");
+	});
+	a.neq(func.call, Function.prototype.call);
+	a.eq("func", func.call())
+	a.eq("func", func.call())
+
+	Interceptor.revert(func);
+	a.eq( _interceptedCall, func.call);
+	Interceptor.revert(func);
+	a.eq( Function.prototype.call, func.call);
+
+};
+
+
+
+test.testRevertAll = function(a){
+	var func = function(){return "func"};
+	a.eq(func.call, Function.prototype.call);
+	Interceptor.intercept(func, function(thisArg, targetFunc, argList){
+		if(thisArg !== undefined)
+			this.doReturn(thisArg.toString());
+	});
+	a.neq(func.call, Function.prototype.call);
+	a.eq("abc", func.call("abc"))
+
+	var _interceptedCall = func.call ;
+	Interceptor.intercept(func, null, function(thisArg, targetFunc, argList, ret){
+		if(ret == undefined)
+			this.doReturn("");
+	});
+	a.neq(func.call, Function.prototype.call);
+	a.eq("func", func.call())
+	a.eq("func", func.call())
+
+	Interceptor.revertAll(func);
+	a.eq( Function.prototype.call, func.call);
+
+};

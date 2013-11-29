@@ -4,20 +4,13 @@
 */
 
 (function(global, module){
-	var registry = {};
-	var interceptorList = [];
-	/** Function constants */
-	var SKIP = function(){ return "Skips the target function. "};
-	var NOSKIP = function(){ return "Continue to run target function. "};
+	"use strict";
 	/* 
 		1. before one function call.
 		2. after one function call.
 		3. customized matcher.
 			* before
 			* after
-		before all functions call ?
-		after all function call ?
-		Interceptors should be 'chainable'
 	*/
 	var Interceptor = function(matcherFunc){
 		matcherFunc = matcherFunc || function(){ return false ;};
@@ -133,7 +126,7 @@
 
 	/** Returns a wrapped call function that is already intercepted by the interceptor */
 	var callFactory = function(_call, interceptor){
-		return function call(arg){
+		var newCall = function call(arg){
 			var thisArg = arguments[0];
 			var argList = argsToArray(arguments);
 			var applyArgList = argList.concat([]); //this is used for invoking the original _call function 
@@ -152,14 +145,18 @@
 
 			//interceptPostCall
 			doInterceptPostCall(thisArg, this, argList, runtimeState, interceptor);
-			// run
-			return runtimeState.returnVal ;
+			
+			var returnVal = runtimeState.returnVal ;
+			runtimeState.finalize();
+			return returnVal ;
 		};
+		newCall._call = _call ;
+		return newCall;
 	};
 
 	/** Returns a wrapped apply function that is already intercepted by the interceptor */
 	var applyFactory = function(_apply, interceptor){
-		return function apply(arg1, arg2){
+		var newApply = function apply(arg1, arg2){
 			var thisArg = arguments[0];
 			var argList;
 			switch(arguments.length){
@@ -185,8 +182,14 @@
 
 			//interceptPostCall
 			doInterceptPostCall(thisArg, this, argList, runtimeState, interceptor);
-			return runtimeState.returnVal ;
+			
+			var returnVal = runtimeState.returnVal ;
+			runtimeState.finalize();
+			return returnVal ;
 		};
+
+		newApply._apply = _apply ;
+		return newApply;
 	};
 	Interceptor.start = function(){
 		
@@ -248,13 +251,6 @@
 		// Function.prototype.apply = _apply ;
 	};
 
-	Interceptor.interceptPreAll = function(interceptorFunc){
-		if(interceptorFunc){
-			var intcpt = new Interceptor(function(){return true ;});
-			intcpt.interceptPreCall = interceptorFunc || intcpt.interceptPreCall;
-			interceptorList.push(intcpt);
-		}
-	}
 
 	Interceptor.intercept = function(targetFunc, preFunc, postFunc){
 		if(typeof targetFunc !== "function"){
@@ -274,6 +270,33 @@
 		targetFunc.apply = applyFactory(targetFunc.apply, interceptor);
 	}
 
+	Interceptor.isIntercepted = function(targetFunc){
+		return targetFunc.call && targetFunc.call._call || targetFunc.apply && targetFunc.apply._apply ;
+	}
+	
+	/** Revert the interception once */
+	Interceptor.revert = function(targetFunc){
+		if(targetFunc && targetFunc.call && targetFunc.call._call){
+			targetFunc.call = targetFunc.call._call ;
+		}
+
+		if(targetFunc && targetFunc.apply && targetFunc.apply._apply){
+			targetFunc.apply = targetFunc.apply._apply ;
+		}
+	};
+
+	Interceptor.revertAll = function(targetFunc){
+		if(targetFunc && targetFunc.call && targetFunc.call._call){
+			while(targetFunc.call._call){
+				targetFunc.call = targetFunc.call._call ;
+			}
+		}
+
+		if(targetFunc && targetFunc.apply && targetFunc.apply._apply){
+			targetFunc.apply = targetFunc.apply._apply ;
+		}
+	};
+
 	var argsToArray = function(args){
 		var arr = [];
 		if(args && args.length)
@@ -283,6 +306,11 @@
 		return arr ;
 	};
 
-	global.Interceptor = (module || {}).exports = Interceptor;
+	var _Interceptor = global.Interceptor;
+	Interceptor.noConflict = function(){
+		global.Interceptor = _Interceptor ;
+		return Interceptor ;
+	};
+	global.Interceptor = module.exports = Interceptor;
 
-})(typeof window !== "undefined"? window: {}, typeof module !== "undefined"? module: undefined);
+})(typeof window !== "undefined"? window: {}, typeof module !== "undefined"? module: {});
