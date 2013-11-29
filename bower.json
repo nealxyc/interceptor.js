@@ -1,0 +1,23 @@
+{
+  "name": "interceptor.js",
+  "version": "0.2.0",
+  "homepage": "https://github.com/nealxyc/interceptor.js",
+  "authors": [
+    "Neal Xiong <nealxyc@gmail.com>"
+  ],
+  "description": "Interceptor.js is a JavaScript framework that provides the ability to intercept a JavaScript function call.",
+  "main": "interceptor.js",
+  "keywords": [
+    "function",
+    "call",
+    "interception"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

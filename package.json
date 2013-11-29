@@ -1,8 +1,8 @@
 {
-  "name": "Interceptor.js",
-  "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "interceptor.js",
+  "version": "0.2.0",
+  "description": "Interceptor.js is a small yet powerful JavaScript tool library that provides the ability to intercept a JavaScript function call.",
+  "main": "interceptor.js",
   "directories": {
     "test": "test"
   },
