@@ -300,6 +300,22 @@
 		}
 	};
 
+	Interceptor.wrap = function(targetFunc, preFunc, postFunc){
+		if(!targetFunc)
+			throw Error("Target function is not given");
+
+		if(preFunc || postFunc){
+			Interceptor.intercept(targetFunc, preFunc, postFunc);
+		}
+
+		var ret = function(){
+			return targetFunc.apply(this, argsToArray(arguments));
+		};
+
+		ret._target = targetFunc ;
+		return ret ;
+	};
+
 	var argsToArray = function(args){
 		var arr = [];
 		if(args && args.length)

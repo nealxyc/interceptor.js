@@ -402,6 +402,28 @@ test.helloWorld = function(a){
 
 }
 
+test.testWrap = function(a){
+	var func = function(){ return "func";};
+	var func = Interceptor.wrap(func, function(thisArg, targetFunc, argList){
+		if(thisArg !== undefined){
+			this.doReturn(thisArg + "");
+		}
+	});
+
+	a.eq("func", func.call());
+	a.eq("obj", func.call("obj"));
+	a.eq("", func.call([]));
+	a.eq("function (){}", func.call(function(){}));
+
+	a.eq("func", func());
+	var obj = { func: func};
+	a.eq("[object Object]", func.bind({})());
+	a.eq("", func.bind([])());
+	a.eq("function (){}", func.bind(function(){})());
+
+	
+};
+
 if(typeof module !== "undefined"){
 	module.exports = test ;
 }
